@@ -1,70 +1,111 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import folium
 import streamlit as st
-import streamlit.components.v1 as components
-
-# --- Streamlit Page Setup ---
-st.set_page_config(page_title="Chicago Permits Dashboard", layout="wide")
-st.title("🏙️ Chicago Permits Data Visualization Dashboard")
-st.markdown("Explore the dataset, charts, and interactive Folium map below.")
-
-# --- Load Dataset ---
-df = pd.read_csv("dataset.csv")
-st.subheader("📊 Dataset Overview")
-st.dataframe(df.head(20))
-
-# --- Basic Info ---
+from streamlit_folium import folium_static
+import matplotlib.pyplot as plt
+import seaborn as sns
 import io
 
+# -------------------------------
+# PAGE CONFIG
+# -------------------------------
+st.set_page_config(
+    page_title="Chicago Permits Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
+
+# -------------------------------
+# LOAD DATA
+# -------------------------------
+@st.cache_data
+def load_data():
+    df = pd.read_csv("dataset.csv")
+    return df
+
+df = load_data()
+
+st.title("🏙️ Chicago Permits Data Dashboard")
+st.caption("An interactive data visualization app built with Streamlit, Pandas, and Folium")
+
+# -------------------------------
+# SIDEBAR FILTERS
+# -------------------------------
+st.sidebar.header("🔍 Filter Data")
+app_type = st.sidebar.selectbox(
+    "Select Application Type:",
+    options=["All"] + sorted(df["APPLICATIONTYPE"].dropna().unique().tolist())
+)
+status = st.sidebar.selectbox(
+    "Select Application Status:",
+    options=["All"] + sorted(df["APPLICATIONSTATUS"].dropna().unique().tolist())
+)
+
+# Apply filters
+filtered_df = df.copy()
+if app_type != "All":
+    filtered_df = filtered_df[filtered_df["APPLICATIONTYPE"] == app_type]
+if status != "All":
+    filtered_df = filtered_df[filtered_df["APPLICATIONSTATUS"] == status]
+
+st.write(f"### Showing {len(filtered_df)} records after filtering")
+
+# -------------------------------
+# METRICS
+# -------------------------------
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Permits", len(df))
+col2.metric("Active Permits", len(df[df["APPLICATIONSTATUS"] == "ACTIVE"]))
+col3.metric("Finalized Permits", len(df[df["APPLICATIONSTATUS"] == "FINALIZED"]))
+
+# -------------------------------
+# DATASET SUMMARY INFO
+# -------------------------------
 st.subheader("📈 Dataset Summary Info")
 buffer = io.StringIO()
 df.info(buf=buffer)
 st.text(buffer.getvalue())
 
-# --- Visualization 1: Application Types ---
-st.subheader("🔹 Application Type Distribution")
-fig1, ax1 = plt.subplots(figsize=(10, 4))
-sns.countplot(data=df, x="APPLICATIONTYPE", order=df["APPLICATIONTYPE"].value_counts().index[:10])
-plt.xticks(rotation=45)
-st.pyplot(fig1)
+# -------------------------------
+# VISUALS
+# -------------------------------
+st.subheader("📊 Permit Distribution by Application Type")
+plt.figure(figsize=(10, 4))
+sns.countplot(y="APPLICATIONTYPE", data=df, order=df["APPLICATIONTYPE"].value_counts().index)
+st.pyplot(plt)
 
-# --- Visualization 2: Application Status ---
-st.subheader("🔹 Application Status Counts")
-fig2, ax2 = plt.subplots(figsize=(10, 4))
-sns.countplot(data=df, x="APPLICATIONSTATUS", order=df["APPLICATIONSTATUS"].value_counts().index[:10])
-plt.xticks(rotation=45)
-st.pyplot(fig2)
+# -------------------------------
+# MAP VISUALIZATION (INTERACTIVE)
+# -------------------------------
+st.subheader("🗺️ Permit Locations in Chicago")
 
-# --- Visualization 3: Work Type Description ---
-st.subheader("🔹 Work Type Description Frequency")
-fig3, ax3 = plt.subplots(figsize=(10, 4))
-sns.countplot(data=df, x="WORKTYPEDESCRIPTION", order=df["WORKTYPEDESCRIPTION"].value_counts().index[:10])
-plt.xticks(rotation=45)
-st.pyplot(fig3)
+# Clean coordinate data
+filtered_df = filtered_df.dropna(subset=["LATITUDE", "LONGITUDE"])
 
-# --- Map Section ---
-st.subheader("🗺️ Chicago Permits Interactive Map")
-st.markdown("Generating map... please wait ⏳")
+if not filtered_df.empty:
+    m = folium.Map(location=[filtered_df["LATITUDE"].mean(), filtered_df["LONGITUDE"].mean()],
+                   zoom_start=10, tiles="CartoDB positron")
+    for _, row in filtered_df.head(500).iterrows():  # show only first 500 for performance
+        folium.CircleMarker(
+            location=[row["LATITUDE"], row["LONGITUDE"]],
+            radius=3,
+            popup=row["APPLICATIONTYPE"],
+            color="blue",
+            fill=True,
+            fill_opacity=0.6
+        ).add_to(m)
+    folium_static(m)
+else:
+    st.warning("No location data available for selected filters.")
 
-# Create map (Folium)
-m = folium.Map(location=[41.8781, -87.6298], zoom_start=11)
-for _, row in df.dropna(subset=['LATITUDE', 'LONGITUDE']).head(500).iterrows():
-    folium.CircleMarker(
-        location=[row['LATITUDE'], row['LONGITUDE']],
-        radius=2,
-        color='blue',
-        fill=True,
-        fill_opacity=0.7
-    ).add_to(m)
+# -------------------------------
+# DATA PREVIEW
+# -------------------------------
+st.subheader("🔢 Data Preview")
+st.dataframe(filtered_df.head(50))
 
-m.save("chicago_permits_map.html")
-
-# --- Embed Map ---
-with open("chicago_permits_map.html", "r", encoding="utf-8") as f:
-    html_data = f.read()
-
-components.html(html_data, height=600)
-
-st.success("✅ Map successfully generated and displayed!")
+# -------------------------------
+# FOOTER
+# -------------------------------
+st.markdown("---")
+st.markdown("**Built by [Sumitt Chaurasiya](https://github.com/sumit-chaurasiya-04)** | Powered by Streamlit 🚀")
