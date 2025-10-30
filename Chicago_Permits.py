@@ -108,4 +108,4 @@ st.dataframe(filtered_df.head(50))
 # FOOTER
 # -------------------------------
 st.markdown("---")
-st.markdown("**Built by [Sumitt Chaurasiya](https://github.com/sumit-chaurasiya-04)** | Powered by Streamlit 🚀")
+st.markdown("**Built by [Sumit Chaurasiya](https://github.com/sumit-chaurasiya-04)** | Powered by Streamlit 🚀")
