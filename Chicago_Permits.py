@@ -16,11 +16,12 @@ st.subheader("📊 Dataset Overview")
 st.dataframe(df.head(20))
 
 # --- Basic Info ---
+import io
+
 st.subheader("📈 Dataset Summary Info")
-buffer = []
+buffer = io.StringIO()
 df.info(buf=buffer)
-info_str = "\n".join(buffer)
-st.text(info_str)
+st.text(buffer.getvalue())
 
 # --- Visualization 1: Application Types ---
 st.subheader("🔹 Application Type Distribution")
