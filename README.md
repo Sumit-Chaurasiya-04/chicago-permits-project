@@ -1,14 +1,14 @@
-## 🚀 Live Demo
+## Live Demo
 [Launch App](https://chicago-permits-project-axav7k9xltsnyz7fxejtiv.streamlit.app/)
 
-## 🧰 Tech Stack
+## Tech Stack
 - Streamlit
 - Pandas
 - Folium
 - Seaborn
 - Matplotlib
 
-## 🗺️ Features
+## Features
 - Interactive map of Chicago permit data  
 - Sidebar filters for exploration  
 - Dynamic charts and metrics  
