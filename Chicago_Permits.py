@@ -11,7 +11,6 @@ import io
 # -------------------------------
 st.set_page_config(
     page_title="Chicago Permits Dashboard",
-    page_icon="📊",
     layout="wide"
 )
 
@@ -25,13 +24,13 @@ def load_data():
 
 df = load_data()
 
-st.title("🏙️ Chicago Permits Data Dashboard")
+st.title("Chicago Permits Data Dashboard")
 st.caption("An interactive data visualization app built with Streamlit, Pandas, and Folium")
 
 # -------------------------------
 # SIDEBAR FILTERS
 # -------------------------------
-st.sidebar.header("🔍 Filter Data")
+st.sidebar.header("Filter Data")
 app_type = st.sidebar.selectbox(
     "Select Application Type:",
     options=["All"] + sorted(df["APPLICATIONTYPE"].dropna().unique().tolist())
@@ -61,7 +60,7 @@ col3.metric("Finalized Permits", len(df[df["APPLICATIONSTATUS"] == "FINALIZED"])
 # -------------------------------
 # DATASET SUMMARY INFO
 # -------------------------------
-st.subheader("📈 Dataset Summary Info")
+st.subheader("Dataset Summary Info")
 buffer = io.StringIO()
 df.info(buf=buffer)
 st.text(buffer.getvalue())
@@ -69,7 +68,7 @@ st.text(buffer.getvalue())
 # -------------------------------
 # VISUALS
 # -------------------------------
-st.subheader("📊 Permit Distribution by Application Type")
+st.subheader("Permit Distribution by Application Type")
 plt.figure(figsize=(10, 4))
 sns.countplot(y="APPLICATIONTYPE", data=df, order=df["APPLICATIONTYPE"].value_counts().index)
 st.pyplot(plt)
@@ -77,7 +76,7 @@ st.pyplot(plt)
 # -------------------------------
 # MAP VISUALIZATION (INTERACTIVE)
 # -------------------------------
-st.subheader("🗺️ Permit Locations in Chicago")
+st.subheader("Permit Locations in Chicago")
 
 # Clean coordinate data
 filtered_df = filtered_df.dropna(subset=["LATITUDE", "LONGITUDE"])
@@ -101,7 +100,7 @@ else:
 # -------------------------------
 # DATA PREVIEW
 # -------------------------------
-st.subheader("🔢 Data Preview")
+st.subheader("Data Preview")
 st.dataframe(filtered_df.head(50))
 
 # -------------------------------
